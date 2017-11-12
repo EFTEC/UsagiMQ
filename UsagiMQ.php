@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Class UsagiMQ
+ * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
  * @version 1.0 2017-11-12
  * @link https://www.google.cl
@@ -16,7 +16,13 @@ class UsagiMQ
     const MAXTIMEKEEP=3600*24; // max time in seconds to keep the information,-1 for unlimited.
     const MAXPOST=1024*1024*20; // 20mb
 
-    public function __construct($redisIP,$redisPort,$redisDB=0)
+    /**
+     * UsagiMQ constructor.
+     * @param $redisIP . Example '127.0.0.1'
+     * @param $redisPort.  Example 6379
+     * @param int $redisDB.  Example 0,1,etc.
+     */
+    public function __construct($redisIP,$redisPort=6379,$redisDB=0)
     {
         if (!class_exists("Redis")) {
             echo "this software required Redis https://pecl.php.net/package/redis";
@@ -68,7 +74,7 @@ class UsagiMQ
     }
 
     /**
-     * List of all id of envelop pending.
+     * List with all ids of envelop pending.
      * @param $op
      * @return array
      */
@@ -84,7 +90,7 @@ class UsagiMQ
     }
 
     /**
-     * @param $id
+     * @param string $id  Id of the envelope.
      * @return array Returns an array with the form of an envelope[id,from,body,date,try]
      */
     public function readItem($id) {
@@ -93,15 +99,14 @@ class UsagiMQ
 
     /**
      * Delete an envelope
-     * @param $op
-     * @param $id
+     * @param string $id  Id of the envelope.
      */
-    public function delete($op,$id) {
-        $this->redis->delete("UsagiMQ_{$op}:".$id);
+    public function delete($id) {
+        $this->redis->delete($id);
     }
 
     /**
-     * Delete all envelope.
+     * Delete all envelope and reset the counters.
      */
     function deleteAll() {
         $it = NULL;
@@ -113,6 +118,9 @@ class UsagiMQ
         $this->redis->set('counterUsagiMQ',"0");
     }
 
+    /**
+     * Close redis.
+     */
     function close() {
         $this->redis->close();
     }
