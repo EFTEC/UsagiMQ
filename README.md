@@ -1,7 +1,7 @@
 ![logo](visio/logo.png "logo")
 
 # UsagiMQ
-A simplest Message Queue by using Redis and PHP in a single box (one class)
+A minimalist (less than 500 lines of code) Message Queue by using Redis and PHP in a single box (one class)
 
 
 
@@ -50,11 +50,11 @@ UsagiMQ lightweight:
 
 ## Envelope structure
 
-id = the identified of the envelope (required).
-from = who send the envelope (optional)
-body = the content of the envelope (required).
-date = date when it was received. (required, generated)
-try = number of tries. (required, for use future, generated)
+- id = the identified of the envelope (required).  
+- from = who send the envelope (optional)  
+- body = the content of the envelope (required).  
+- date = date when it was received. (required, generated)  
+- try = number of tries. (required, for use future, generated)  
 
 
 ## MQ Server
