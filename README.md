@@ -28,7 +28,7 @@ For the same example, a PUBLISHER (former client) could uses 0.001 to call the M
 The MQ should be as fast as possible and be able to listen and store the request (envelope) of every publisher. However, the MQ is not doing the end operation, its similar to a email server.
 Later, a subscriber could read this information and process as correspond.
 
-The drawback of this method is adding a delay, the process is not executed synchronously but asynchronously, and the PUBLISHER don't know really if the information was processed correctly by the SUBSCRIBER.
+The drawback of this method is it adds a delay, the process is not executed synchronously but asynchronously, and the PUBLISHER don't know really if the information was processed correctly by the SUBSCRIBER.
 
 ## Considerations
 
