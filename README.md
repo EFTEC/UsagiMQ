@@ -44,9 +44,11 @@ UsagiMQ lightweight:
 - One class, it requires Redis and nothing more.
 - < 500 lines of code.
 - Easy customization.
+- **It requires a single file (UsagiMQ.php)** 
 
+## Is it scalable?
 
-**It requires a single file (UsagiMQ.php)**
+Yes, but it requires a LOAD BALANCER. 
 
 ## Envelope structure
 
@@ -170,6 +172,15 @@ Delete an item.
 The key could be obtained by the command listPending.  
 Example:
 > $usa->deleteItem('UsagiMQ_insert:2');
+
+## failedItem($key,$arr)
+
+We mark the item as failed. A failed item, is a item that we will try it again (until a limit). If we failed in all tries then, we will delete the item.   
+- The key could be obtained by the command listPending.
+- $arr is the array with the envelope [id,from,body,date,try]   
+Example:
+> $usa->failedItem('UsagiMQ_insert:2',array('id'=>2,'from'=>'system','body'=>'xxx','date'=>'2000-01-01','try'=>0));
+
 
 ## deleteAll()
 

@@ -16,6 +16,8 @@ class UsagiMQ
     const MAXTIMEKEEP=3600*24; // max time in seconds to keep the information,-1 for unlimited.
     const MAXPOST=1024*1024*20; // 20mb
 
+    const MAXTRY=20; // max number of tries. If the operation fails 20 times then the item is deleted.
+
     /**
      * UsagiMQ constructor.
      * @param $redisIP . Example '127.0.0.1'
@@ -96,6 +98,20 @@ class UsagiMQ
      */
     public function readItem($key) {
        return json_decode($this->redis->get($key), true);
+    }
+
+    /**
+     * The item failed. So we will try it again soon.
+     * @param string $key Key of the envelope.
+     * @param array $arr . The envelope [id,from,body,date,try]
+     */
+    public function failedItem($key,$arr) {
+        $arr['try']++;
+        if ($arr['try']>self::MAXTRY) {
+            $this->deleteItem($key); // we did the best but we failed.
+            return;
+        }
+        $this->redis->set($key,json_encode($arr),self::MAXTIMEKEEP);
     }
 
     /**

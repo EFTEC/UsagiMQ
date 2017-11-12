@@ -15,6 +15,10 @@ foreach($listEnveloper as $id) {
     var_dump($env);
     // todo: code goes here
 
-    // and if its executed then we could delete.
-    //$usa->deleteItem($id);
+
+    if ($correct) {
+        $usa->deleteItem($id); // YAY!
+    } else {
+        $usa->failedItem($id,$env); // booh hiss!.
+    }
 }
