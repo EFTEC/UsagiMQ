@@ -1,5 +1,9 @@
+![logo](visio/logo.png "logo")
+
 # UsagiMQ
-A simplest Message Queue by using Redis and PHP in a single box (one class, no aditional dependency)
+A simplest Message Queue by using Redis and PHP in a single box (one class)  
+
+
 
 ## Why i should use a Message Queue (MQ)?
 
@@ -7,7 +11,7 @@ Lets say the next example, a system where one system sends information to anothe
 
 If the webservice is doing a **slow operation and its receiving the information of many clients** at once then, sooner or later, the system could collapses or bottleneck.
 
-For example, if every client uses 0.1 second to do the operation (receiving the information and storing in the database), and we have 1000 customers then, every operation takes 1.6 minutes. This not the ideal for most cases.
+For example, if every client uses 0.1 second to do the operation (receiving the information and storing in the database), and we have 1000 customers then, every operation could take 1.6 minutes.
 
 
 ![Web Service](visio/WebService.jpg "Web Service")
@@ -15,6 +19,8 @@ For example, if every client uses 0.1 second to do the operation (receiving the 
 The solution is to add a Message Queue to the system. A Message Queue is only a server that stores messages/operations received by a PUBLISHER and later a SUBSCRIBER could executes.
 
 For the same example, a PUBLISHER (former client) could uses 0.001 to call the MQ. Then the SUBSCRIBER could do all the operations, for example every hour/at night without worry if all the operations take many minutes or hours.
+
+
 
 
 ![MQ](visio/MQ.jpg "MQ")
@@ -31,7 +37,14 @@ This library uses Redis. Redis is an open source (BSD licensed), in-memory data 
 ## Why UsagiMQ?
 
 While there are many Message Queue in the market (including open source / freeware / commercial) but most of them are heavyweight.
-UsagiMQ is lightweight, thinking in customization. You could optimize and customize it for your needing, for example, changing the structure of envelope.
+UsagiMQ is lightweight, it was developed thinking in customization. You could optimize and customize it for your needing, for example, changing the structure of envelope.
+
+UsagiMQ lightweight:
+
+- One class, it requires Redis and nothing more.
+- < 500 lines of code.
+- Easy customization.
+
 
 **It requires a single file (UsagiMQ.php)**
 
@@ -58,9 +71,42 @@ if ($usa->connected) {
   echo "not connected";
 }
 ```
+
+### Publisher (who sends the request/envelope)
+
+A publisher requires to send a POST to the page. So it could be a CURL, Javascript, PHP, Java, C# and many more.
+
+The url should be as follow:  
+mq.php?id=**ID**&op=**OP**&from=**FROM**
+
+while the body (content) should be sends as POST.
+
+- ID = is an identified of the message (required but not specifically should be unique)   
+- OP = the operation to do. Its some sort of folder or category.   
+- FROM = who is sending the message.   It could be used for authentication.   
+
+
+```
+<?php
+   $ch = curl_init();
+   
+   curl_setopt($ch, CURLOPT_URL,            "http://localhost/UsagiMQ/mq.php?id=200&op=INSERTCUSTOMER&from=SALESSYSTEM" );
+   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+   curl_setopt($ch, CURLOPT_POST,           1 );
+   curl_setopt($ch, CURLOPT_POSTFIELDS,     "** IT IS WHAT WE WANT TO SEND**" );
+   curl_setopt($ch, CURLOPT_HTTPHEADER,     array('Content-Type: text/plain'));
+   
+   $result=curl_exec ($ch);
+   
+   echo $result; // if returns OKI then the operation was successful. Otherwise, it an error.
+```
+
+
 ## Subscriber (local)
 
 Its a local subscriber (has access to Redis). However, it could be used for to create a remote subscriber.
+
+May be it could runs as a daemon / in a schedule task / or at request.
 
 Example
 ``` 
@@ -101,6 +147,6 @@ $DATABASE (optional), indicates the database of redis (0 is the default value)
 - Error control / Log
 - Readme missing the command
 - Readme missing the PUBLISHER.
-- 
+- Proofreading 
 
  
