@@ -58,12 +58,13 @@ class UsagiMQ
                 return "BAD INFO";
             }
             $envelope = array();
-            $envelope['id'] = $id;
+            $envelope['id'] = $id; // this id is not the id used by the library. This could be repeated.
             $envelope['from'] = $from; // it could be used for security
             $envelope['body'] = $post;
             $envelope['date'] = time();
             $envelope['try'] = 0; // use future.
-            $ok = $this->redis->set("UsagiMQ_{$op}:" . $counter, json_encode($envelope), self::MAXTIMEKEEP); // 24 hours
+            $key="UsagiMQ_{$op}:" . $counter; // the key is unique and is composed by the operator and a counter.
+            $ok = $this->redis->set($key, json_encode($envelope), self::MAXTIMEKEEP); // 24 hours
             if ($ok) {
                 return "OKI";
             }
@@ -90,19 +91,19 @@ class UsagiMQ
     }
 
     /**
-     * @param string $id  Id of the envelope.
+     * @param string $key Key of the envelope.
      * @return array Returns an array with the form of an envelope[id,from,body,date,try]
      */
-    public function readItem($id) {
-       return json_decode($this->redis->get($id), true);
+    public function readItem($key) {
+       return json_decode($this->redis->get($key), true);
     }
 
     /**
      * Delete an envelope
-     * @param string $id  Id of the envelope.
+     * @param string $key Key of the envelope.
      */
-    public function delete($id) {
-        $this->redis->delete($id);
+    public function delete($key) {
+        $this->redis->delete($key);
     }
 
     /**
