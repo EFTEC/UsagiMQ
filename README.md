@@ -1,5 +1,5 @@
 # UsagiMQ
-A simplest Message Queue by using Redis and PHP.
+A simplest Message Queue by using Redis and PHP in a single box (one class, no aditional dependency)
 
 ## Why i should use a Message Queue (MQ)?
 
@@ -7,10 +7,15 @@ Lets say the next example, a system where one system sends information to anothe
 
 If the webservice is doing a **slow operation and its receiving the information of many clients** at once then, sooner or later, the system could collapses or bottleneck.
 
+For example, if every client uses 0.1 second to do the operation (receiving the information and storing in the database), and we have 1000 customers then, every operation takes 1.6 minutes. This not the ideal for most cases.
+
+
 ![Web Service](visio/WebService.jpg "Web Service")
 
-
 The solution is to add a Message Queue to the system. A Message Queue is only a server that stores messages/operations received by a PUBLISHER and later a SUBSCRIBER could executes.
+
+For the same example, a PUBLISHER (former client) could uses 0.001 to call the MQ. Then the SUBSCRIBER could do all the operations, for example every hour/at night without worry if all the operations take many minutes or hours.
+
 
 ![MQ](visio/MQ.jpg "MQ")
 
@@ -78,7 +83,21 @@ foreach($listEnveloper as $id) {
 }
 ```
 
+# Commands
+
+## Constructor
+
+> $usa=new UsagiMQ($IPREDIS,$PORT,$DATABASE);
+
+$IPREDIS indicates the IP of where is the redis server.
+$PORT indicates the REDIS port.
+$DATABASE (optional), indicates the database of redis (0 is the default value)
+
+
 ## Todo
 
-Error control / Log
+- Error control / Log
+- Readme missing the command
+- Readme missing the PUBLISHER.
+
  
