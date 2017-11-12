@@ -102,7 +102,7 @@ class UsagiMQ
      * Delete an envelope
      * @param string $key Key of the envelope.
      */
-    public function delete($key) {
+    public function deleteItem($key) {
         $this->redis->delete($key);
     }
 

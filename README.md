@@ -1,13 +1,13 @@
 ![logo](visio/logo.png "logo")
 
 # UsagiMQ
-A simplest Message Queue by using Redis and PHP in a single box (one class)  
+A simplest Message Queue by using Redis and PHP in a single box (one class)
 
 
 
-## Why i should use a Message Queue (MQ)?
+## Why I should use a Message Queue (MQ)?
 
-Lets say the next example, a system where one system sends information to another, for example a web client and a web service.  
+Let’s say the next example, a system where one system sends information to another, for example a web client and a web service.
 
 If the webservice is doing a **slow operation and its receiving the information of many clients** at once then, sooner or later, the system could collapses or bottleneck.
 
@@ -16,7 +16,7 @@ For example, if every client uses 0.1 second to do the operation (receiving the 
 
 ![Web Service](visio/WebService.jpg "Web Service")
 
-The solution is to add a Message Queue to the system. A Message Queue is only a server that stores messages/operations received by a PUBLISHER and later a SUBSCRIBER could executes.
+The solution is to add a Message Queue to the system. A Message Queue is only a server that stores messages/operations received by a PUBLISHER and later a SUBSCRIBER could execute.
 
 For the same example, a PUBLISHER (former client) could uses 0.001 to call the MQ. Then the SUBSCRIBER could do all the operations, for example every hour/at night without worry if all the operations take many minutes or hours.
 
@@ -25,10 +25,10 @@ For the same example, a PUBLISHER (former client) could uses 0.001 to call the M
 
 ![MQ](visio/MQ.jpg "MQ")
 
-The MQ should be as fast as possible and be able to listen and store the request (envelope) of every publisher. However, the MQ is not doing the end operation, its similar to a email server. 
+The MQ should be as fast as possible and be able to listen and store the request (envelope) of every publisher. However, the MQ is not doing the end operation, its similar to a email server.
 Later, a subscriber could read this information and process as correspond.
 
-The drawback of this method is adding a delay, the process is not executed syncronously but asyncronously, and the PUBLISHER don't know really if the information was processed correctly by the SUBSCRIBER.
+The drawback of this method is adding a delay, the process is not executed synchronously but asynchronously, and the PUBLISHER don't know really if the information was processed correctly by the SUBSCRIBER.
 
 ## Considerations
 
@@ -50,66 +50,66 @@ UsagiMQ lightweight:
 
 ## Envelope structure
 
-id = the identified of the envelope (required).   
-from = who send the envelope (optional)   
-body = the content of the envelope (required).   
-date = date when it was received. (required, generated)   
-try = number of tries. (required, for use future, generated)   
+id = the identified of the envelope (required).
+from = who send the envelope (optional)
+body = the content of the envelope (required).
+date = date when it was received. (required, generated)
+try = number of tries. (required, for use future, generated)
 
 
-## MQ Server 
+## MQ Server
 
 Who is listening and storing the envelope (request). It should be as fast as possible.
 
 Example:
-``` 
-include "UsagiMQ.php";  
+```
+include "UsagiMQ.php";
 $usa=new UsagiMQ("127.0.0.1",6379,1);
 if ($usa->connected) {
-  echo $usa->receive();
+echo $usa->receive();
 } else {
-  echo "not connected";
+echo "not connected";
 }
 ```
 
 ### Publisher (who sends the request/envelope)
 
-A publisher requires to send a POST to the page. So it could be a CURL, Javascript, PHP, Java, C# and many more.
+A publisher requires to send a POST to the page. So it could be a CURL, JavaScript, PHP, Java, C# and many more.
 
-The url should be as follow:  
+The url should be as follow:
 mq.php?id=**ID**&op=**OP**&from=**FROM**
 
 while the body (content) should be sends as POST.
 
-- ID = is an identified of the message (required but not specifically should be unique)   
-- OP = the operation to do. Its some sort of folder or category.   
-- FROM = who is sending the message.   It could be used for authentication.   
+- ID = is an identified of the message (required but not specifically should be unique)
+- OP = the operation to do. Its some sort of folder or category.
+- FROM = who is sending the message.   It could be used for authentication.
 
 
 ```
 <?php
-   $ch = curl_init();
-   
-   curl_setopt($ch, CURLOPT_URL,            "http://localhost/UsagiMQ/mq.php?id=200&op=INSERTCUSTOMER&from=SALESSYSTEM" );
-   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
-   curl_setopt($ch, CURLOPT_POST,           1 );
-   curl_setopt($ch, CURLOPT_POSTFIELDS,     "** IT IS WHAT WE WANT TO SEND**" );
-   curl_setopt($ch, CURLOPT_HTTPHEADER,     array('Content-Type: text/plain'));
-   
-   $result=curl_exec ($ch);
-   
-   echo $result; // if returns OKI then the operation was successful. Otherwise, it an error.
+$ch = curl_init();
+
+curl_setopt($ch, CURLOPT_URL,            "http://localhost/UsagiMQ/mq.php?id=200&op=INSERTCUSTOMER&from=SALESSYSTEM" );
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+curl_setopt($ch, CURLOPT_POST,           1 );
+curl_setopt($ch, CURLOPT_POSTFIELDS,     "** IT IS WHAT WE WANT TO SEND**" );
+curl_setopt($ch, CURLOPT_HTTPHEADER,     array('Content-Type: text/plain'));
+
+$result=curl_exec ($ch);
+
+echo $result; // if returns OKI then the operation was successful. Otherwise, it an error.
 ```
 
 
 ## Subscriber (local)
 
-Its a local subscriber (has access to Redis). However, it could be used for to create a remote subscriber.
+It’s a local subscriber (has access to Redis). However, it could be used for to create a remote subscriber.
 
 May be it could runs as a daemon / in a schedule task / or at request.
 
 Example
-``` 
+```
 <?php
 // its a local subscriber
 include "UsagiMQ.php";
@@ -127,7 +127,7 @@ foreach($listEnveloper as $id) {
     var_dump($env);
     // here we process the envelope
     // and if its right then we could delete.
-    //$usa->delete($id);
+    //$usa->deleteItem($id);
 }
 ```
 
@@ -137,16 +137,55 @@ foreach($listEnveloper as $id) {
 
 > $usa=new UsagiMQ($IPREDIS,$PORT,$DATABASE);
 
-$IPREDIS indicates the IP of where is the redis server.
-$PORT indicates the REDIS port.
-$DATABASE (optional), indicates the database of redis (0 is the default value)
+$IPREDIS indicates the IP of where is the Redis server.
+$PORT (optional) indicates the REDIS port (default value 6379)
+$DATABASE (optional), indicates the database of Redis (0 is the default value)
+## receive()
 
+Receive information from the PUBLISHER.
+
+## listPending($op)
+
+List all keys of pending envelopers per operation.  
+
+example:
+
+> $array=$usa->listPending('insert');
+
+> $array=$usa->listPending('update');
+
+
+## readItem($key)
+
+Read an item. When an item is read, its not deleted. It should be deleted once its processed.
+The key could be obtained by the command listPending.
+
+Example:
+> $usa->readItem('UsagiMQ_insert:2');
+
+
+## deleteItem($key)
+
+Delete an item.   
+The key could be obtained by the command listPending.  
+Example:
+> $usa->deleteItem('UsagiMQ_insert:2');
+
+## deleteAll()
+
+Delete all items and resets the counter. 
+
+## close()
+
+Close Redis. Its not required to use.
+
+# versions
+
+- 2017-11-12 first version
 
 ## Todo
 
 - Error control / Log
 - Readme missing the command
 - Readme missing the PUBLISHER.
-- Proofreading 
 
- 

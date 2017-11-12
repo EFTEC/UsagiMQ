@@ -13,7 +13,8 @@ $listEnveloper=$usa->listPending("insert");
 foreach($listEnveloper as $id) {
     $env=$usa->readItem($id);
     var_dump($env);
-    // here we process the envelope
-    // and if its right then we could delete.
-    //$usa->delete($id);
+    // todo: code goes here
+
+    // and if its executed then we could delete.
+    //$usa->deleteItem($id);
 }
