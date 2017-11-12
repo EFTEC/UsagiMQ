@@ -28,6 +28,7 @@ This library uses Redis. Redis is an open source (BSD licensed), in-memory data 
 While there are many Message Queue in the market (including open source / freeware / commercial) but most of them are heavyweight.
 UsagiMQ is lightweight, thinking in customization. You could optimize and customize it for your needing, for example, changing the structure of envelope.
 
+**It requires a single file (UsagiMQ.php)**
 
 ## Envelope structure
 
