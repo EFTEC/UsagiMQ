@@ -99,5 +99,6 @@ $DATABASE (optional), indicates the database of redis (0 is the default value)
 - Error control / Log
 - Readme missing the command
 - Readme missing the PUBLISHER.
+- 
 
  

@@ -1,0 +1,27 @@
+{
+  "name": "eftec/usagimq",
+  "description": "The standalone version Blade Template Engine from Laravel in a single php file",
+  "type": "library",
+  "keywords": ["blade","template","view"],
+  "homepage": "https://github.com/EFTEC/UsagiMQ",
+  "minimum-stability": "beta",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jorge Patricio Castro Castillo",
+      "email": "jcastro@eftec.cl"
+    }],
+  "require": {
+    "php": ">=5.4"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0-dev"
+    }
+  },
+  "autoload": {
+      "psr-4": {
+        "eftec\\": "vendor/eftec/"
+      }
+  }
+}
