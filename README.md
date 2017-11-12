@@ -44,7 +44,9 @@ date = date when it was received. (required, generated)
 try = number of tries. (required, for use future, generated)   
 
 
-## MQ Server (where the envelope are stored)
+## MQ Server 
+
+Who is listening and storing the envelope (request). It should be as fast as possible.
 
 Example:
 ``` 
