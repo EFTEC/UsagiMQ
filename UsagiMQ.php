@@ -13,10 +13,15 @@ class UsagiMQ
     /** @var  bool $connected */
     public $connected=false; // false if redis is not connected. true if its connected.
 
-    const MAXTIMEKEEP=3600*24; // max time in seconds to keep the information,-1 for unlimited.
+    public $op=''; // last op obtained
+    public $key=''; // last key obtained
+
+    const MAXTIMEKEEP=3600*24*14; // max time in seconds to keep the information, 2 weeks ,-1 for unlimited.
     const MAXPOST=1024*1024*20; // 20mb
 
     const MAXTRY=20; // max number of tries. If the operation fails 20 times then the item is deleted.
+
+    const LOGFILE='usagimq.txt'; // empty for no log
 
     /**
      * UsagiMQ constructor.
@@ -26,18 +31,24 @@ class UsagiMQ
      */
     public function __construct($redisIP,$redisPort=6379,$redisDB=0)
     {
-        if (!class_exists("Redis")) {
-            echo "this software required Redis https://pecl.php.net/package/redis";
-            die(1);
+        try {
+            if (!class_exists("Redis")) {
+                echo "this software required Redis https://pecl.php.net/package/redis";
+                die(1);
+            }
+            $this->redis = new Redis();
+            $ok=@$this->redis->connect($redisIP, $redisPort, 5); // 5 sec timeout.
+            if (!$ok) {
+                $this->redis=null;
+                $this->debugFile("Unable to open redis $redisIP : $redisPort",'__construct');
+                return;
+            }
+            @$this->redis->select($redisDB);
+            $this->connected=true;
+        } catch (Exception $ex) {
+            $this->connected=false;
+            $this->debugFile($ex->getMessage(),'__construct');
         }
-        $this->redis = new Redis();
-        $ok=@$this->redis->connect($redisIP, $redisPort, 5); // 5 sec timeout.
-        if (!$ok) {
-            $this->redis=null;
-            return;
-        }
-        @$this->redis->select($redisDB);
-        $this->connected=true;
     }
 
     /**
@@ -49,13 +60,13 @@ class UsagiMQ
             $counter = $this->redis->incr('counterUsagiMQ');
             $post = file_get_contents('php://input');
             $id = @$_GET['id'];
-            $op = @$_GET['op']; // operation.
+            $this->op = @$_GET['op']; // operation.
             $from = @$_GET['from']; // security if any (optional)
 
             if (empty($post) || empty($op) || empty($id)) {
                 return "NO INFO";
             }
-            if (strlen($id)>1000 || strlen($op)>1000 || strlen($from)>1000 || strlen($post)>self::MAXPOST) {
+            if (strlen($id)>1000 || strlen($this->op)>1000 || strlen($from)>1000 || strlen($post)>self::MAXPOST) {
                 // avoid overflow.
                 return "BAD INFO";
             }
@@ -65,13 +76,16 @@ class UsagiMQ
             $envelope['body'] = $post;
             $envelope['date'] = time();
             $envelope['try'] = 0; // use future.
-            $key="UsagiMQ_{$op}:" . $counter; // the key is unique and is composed by the operator and a counter.
-            $ok = $this->redis->set($key, json_encode($envelope), self::MAXTIMEKEEP); // 24 hours
+            $this->key="UsagiMQ_{$this->op}:" . $counter; // the key is unique and is composed by the operator and a counter.
+            $ok = $this->redis->set($this->key, json_encode($envelope), self::MAXTIMEKEEP); // 24 hours
             if ($ok) {
                 return "OKI";
             }
-            return "error in receive";
+            $msg='Error reciving information';
+            $this->debugFile($msg,'receive');
+            return $msg;
         } catch (Exception $ex) {
+            $this->debugFile($ex->getMessage(),'receive');
             return $ex->getMessage();
         }
     }
@@ -106,12 +120,16 @@ class UsagiMQ
      * @param array $arr . The envelope [id,from,body,date,try]
      */
     public function failedItem($key,$arr) {
-        $arr['try']++;
-        if ($arr['try']>self::MAXTRY) {
-            $this->deleteItem($key); // we did the best but we failed.
-            return;
+        try {
+            $arr['try']++;
+            if ($arr['try'] > self::MAXTRY) {
+                $this->deleteItem($key); // we did the best but we failed.
+                return;
+            }
+            $this->redis->set($key, json_encode($arr), self::MAXTIMEKEEP);
+        } catch(Exception $ex) {
+            $this->debugFile($ex->getMessage(),'failedItem');
         }
-        $this->redis->set($key,json_encode($arr),self::MAXTIMEKEEP);
     }
 
     /**
@@ -119,13 +137,18 @@ class UsagiMQ
      * @param string $key Key of the envelope.
      */
     public function deleteItem($key) {
-        $this->redis->delete($key);
+        try {
+            $this->redis->delete($key);
+        } catch(Exception $ex) {
+            $this->debugFile($ex->getMessage(),'deleteItem');
+        }
     }
 
     /**
      * Delete all envelope and reset the counters.
      */
     function deleteAll() {
+        try {
         $it = NULL;
         while($arr_keys = $this->redis->scan($it, "UsagiMQ_*", 10000)) {
             foreach($arr_keys as $v) {
@@ -133,13 +156,49 @@ class UsagiMQ
             }
         }
         $this->redis->set('counterUsagiMQ',"0");
+        } catch(Exception $ex) {
+            $this->debugFile($ex->getMessage(),'deleteAll');
+        }
     }
 
     /**
      * Close redis.
      */
     function close() {
-        $this->redis->close();
+        try {
+            $this->redis->close();
+        } catch(Exception $ex) {
+            $this->debugFile($ex->getMessage(),'close');
+        }
+    }
+
+    private function debugFile($txt,$type="ERROR") {
+
+        if (empty(self::LOGFILE)) {
+            return;
+        }
+        $folder=(@ini_get('error_log')!="")?dirname(ini_get('error_log')):'';
+        $file=$folder.'\\'.self::LOGFILE;
+        $fz=@filesize($file);
+
+        if (is_object($txt) || is_array($txt)) {
+            $txtW=print_r($txt,true);
+        } else {
+            $txtW=$txt;
+        }
+
+        if ($fz>100000) {
+            // more than 100kb, reduces it.
+            $fp = @fopen($file, 'w');
+        } else {
+            $fp = @fopen($file, 'a');
+        }
+        if (!$fp) {
+            die(1);
+        }
+        $today=new DateTime();
+        fwrite($fp,$today->format('Y-m-d H:i:s')."\t[{$type}:]\t{$txtW}\n");
+        fclose($fp);
     }
 
 }

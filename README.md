@@ -74,6 +74,9 @@ echo "not connected";
 }
 ```
 
+Example MQ server that calls a worker (subscriber).  See example : mqwithworker.php
+
+
 ### Publisher (who sends the request/envelope)
 
 A publisher requires to send a POST to the page. So it could be a CURL, JavaScript, PHP, Java, C# and many more.
@@ -127,9 +130,15 @@ $listEnveloper=$usa->listPending("insert");
 foreach($listEnveloper as $id) {
     $env=$usa->readItem($id);
     var_dump($env);
-    // here we process the envelope
-    // and if its right then we could delete.
-    //$usa->deleteItem($id);
+    // todo: code goes here
+
+    // $correct indicates if the operation was successful or not. For example, if the operation was to insert and the operation failed.
+    // We also could decide to delete it for any case. Its up to us.
+    if ($correct) {
+        $usa->deleteItem($id); // YAY!
+    } else {
+        $usa->failedItem($id,$env); // booh hiss!.
+    }
 }
 ```
 
