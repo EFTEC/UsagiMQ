@@ -3,7 +3,7 @@
 /**
  * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
- * @version 1.0 2017-11-12
+ * @version 1.1 2017-11-14
  * @link https://www.google.cl
  */
 class UsagiMQ
@@ -103,6 +103,7 @@ class UsagiMQ
                 $redisKeys[]=$str_key;
             }
         }
+        natsort($redisKeys); // why sort,because we use scan/set and it doesn't sort. zadd is another alternative but it lacks of ttl
         return $redisKeys;
     }
 

@@ -201,7 +201,8 @@ Close Redis. Its not required to use.
 
 # versions
 
-- 2017-11-12 first version
+- 2017-11-12 1.0 first version
+- 2017-11-14 1.1 add new members and fixed the operation listPending. Now, its sorted.
 
 ## Todo
 
