@@ -62,14 +62,14 @@ class UsagiMQ
             $id = @$_GET['id'];
             $this->op = @$_GET['op']; // operation.
             $from = @$_GET['from']; // security if any (optional)
-
-            if (empty($post) || empty($op) || empty($id)) {
-                return "NO INFO";
-            }
             if (strlen($id)>1000 || strlen($this->op)>1000 || strlen($from)>1000 || strlen($post)>self::MAXPOST) {
                 // avoid overflow.
                 return "BAD INFO";
             }
+            if (empty($post) || empty($this->op) || empty($id)) {
+                return "NO INFO $post,{$this->op},$id";
+            }
+
             $envelope = array();
             $envelope['id'] = $id; // this id is not the id used by the library. This could be repeated.
             $envelope['from'] = $from; // it could be used for security
