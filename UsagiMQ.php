@@ -37,7 +37,7 @@ class UsagiMQ
                 die(1);
             }
             $this->redis = new Redis();
-            $ok=@$this->redis->connect($redisIP, $redisPort, 5); // 5 sec timeout.
+            $ok=@$this->redis->pconnect($redisIP, $redisPort, 5); // 5 sec timeout.
             if (!$ok) {
                 $this->redis=null;
                 $this->debugFile("Unable to open redis $redisIP : $redisPort",'__construct');
