@@ -68,7 +68,12 @@ Example:
 include "UsagiMQ.php";
 $usa=new UsagiMQ("127.0.0.1",6379,1);
 if ($usa->connected) {
-echo $usa->receive();
+    $info=$usa->receive();
+    if ($info=='NO INFO') {
+        $usa->webUI(); // if not information is send, then it opens the UI.  It is optional
+    } else {
+        echo $info; // show the result.
+    }
 } else {
 echo "not connected";
 }
@@ -198,6 +203,12 @@ Delete all items and resets the counter.
 ## close()
 
 Close Redis. Its not required to use.
+
+## showUI()
+
+Optional. It shows an UI with statistics. The default user and password is **admin** and you should change it.
+
+![logo](visio/uitable.jpg "uitable")
 
 # versions
 
