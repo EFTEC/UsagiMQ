@@ -3,7 +3,7 @@
 /**
  * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
- * @version 1.1 2017-11-14
+ * @version 1.2 2017-11-14
  * @link https://www.google.cl
  */
 class UsagiMQ
@@ -22,6 +22,11 @@ class UsagiMQ
     const MAXTRY=20; // max number of tries. If the operation fails 20 times then the item is deleted.
 
     const LOGFILE='usagimq.txt'; // empty for no log
+
+    const VERSION='1.2 2017-11-14';
+
+    const USER='admin'; // PLEASE CHANGE IT . User and Password of the UI.
+    const PASSWORD='admin'; // PLEASE CHANGE IT
 
     /**
      * UsagiMQ constructor.
@@ -67,7 +72,7 @@ class UsagiMQ
                 return "BAD INFO";
             }
             if (empty($post) || empty($this->op) || empty($id)) {
-                return "NO INFO $post,{$this->op},$id";
+                return "NO INFO";
             }
 
             $envelope = array();
@@ -173,8 +178,7 @@ class UsagiMQ
         }
     }
 
-    private function debugFile($txt,$type="ERROR") {
-
+    public function debugFile($txt,$type="ERROR") {
         if (empty(self::LOGFILE)) {
             return;
         }
@@ -198,8 +202,103 @@ class UsagiMQ
             die(1);
         }
         $today=new DateTime();
-        fwrite($fp,$today->format('Y-m-d H:i:s')."\t[{$type}:]\t{$txtW}\n");
+        $finalMsg=$today->format('Y-m-d H:i:s')."\t[{$type}:]\t{$txtW}\n";
+        if ($type=='ERROR') {
+            @$this->redis->set('LastErrorUsagiMQ', $finalMsg);
+        } else {
+            @$this->redis->set('LastMessageUsagiMQ',$finalMsg);
+        }
+        fwrite($fp,$finalMsg);
         fclose($fp);
     }
+    public function webUI() {
+        //@session_start();
+        $mode=@$_REQUEST['mode'];
+        //$curUser=@$_SESSION['user'];
+        $curUser='';
+        if ($mode=='login' || $curUser=='') {
+            $info['user']=@$_POST['user'];
+            $info['password']=@$_POST['password'];
+            $info['msg']='';
+            $button=@$_POST['button'];
+            if ($button) {
+                if ($info['user']!=self::USER || $info['password']!=self::PASSWORD) {
+                    $info['msg']="User or login incorrect";
+                    $this->loginForm($info);
+                } else {
+                    $this->tableForm();
+                }
+            } else {
+                $this->loginForm($info);
+            }
+        }
 
+    }
+    private function loginForm($info) {
+        $this->cssForm();
+        echo "
+        <form method='post'>
+        <table id='tablecss'>
+            <tr><th><b>UsagiMQ</b></th><th>&nbsp;</th></tr>            
+            <tr><td><b>User:</b></td><td><input type='text' name='user' value='".htmlentities(@$info['user'])."' /></td></tr>
+            <tr><td><b>Password:</b></td><td><input type='text' name='password' value='".htmlentities(@$info['password'])."' /></td></tr>
+            <tr><td colspan='2'><input type='submit' name='button' value='Login' /></td></tr>
+            <tr><td colspan='2'><b color='red'>".@$info['msg']."</b></td></tr>
+            </table>        
+        <input type='hidden' name='mode' value='login' />
+        </form>
+        ";
+    }
+    private function tableForm() {
+        $counter = @$this->redis->get('counterUsagiMQ');
+        $lastError = @$this->redis->get('LastErrorUsagiMQ');
+        $lastMessage = @$this->redis->get('LastMessageUsagiMQ');
+        $num=0;
+        while($arr_keys = $this->redis->scan($it, "UsagiMQ_*", 1000)) { // 1000 read at the same time.
+            foreach($arr_keys as $str_key) {
+                $num++;
+            }
+        }
+        $this->cssForm();
+        echo "
+            <table id='tablecss'>
+            <tr><th><b>UsagiMQ</b></th><th><a href='".$_SERVER["REQUEST_URI"]."'>Logout</a></th></tr>
+            <tr><td><b>Version:</b></td><td>".self::VERSION."</td></tr>            
+            <tr><td><b>Counter:</b></td><td>$counter</td></tr>
+            <tr><td><b>Pending:</b></td><td>$num</td></tr>
+            <tr><td><b>Last Error:</b></td><td>".htmlentities($lastError)."</td></tr>
+            <tr><td><b>Last Message:</b></td><td>".htmlentities($lastMessage)."</td></tr>            
+            </table>
+        ";
+
+    }
+    private function cssForm() {
+        echo "<head>
+            <title>UsagiMQ</title>
+            <style>
+            #tablecss {
+                font-family: \"Trebuchet MS\", Arial, Helvetica, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            
+            #tablecss td, #customers th {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+            
+            #tablecss tr:nth-child(even){background-color: #f2f2f2;}
+            
+            #tablecss tr:hover {background-color: #ddd;}
+            
+            #tablecss th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: left;
+                background-color: #4CAF50;
+                color: white;
+            }
+            </style>
+            </head>";
+    }
 }
