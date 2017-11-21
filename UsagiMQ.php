@@ -69,7 +69,6 @@ class UsagiMQ
      */
     public function receive() {
         try {
-            $counter = $this->redis->incr('counterUsagiMQ');
             $post = file_get_contents('php://input');
             $id = @$_GET['id'];
             $this->op = @$_GET['op']; // operation.
@@ -81,7 +80,7 @@ class UsagiMQ
             if (empty($post) || empty($this->op) || empty($id)) {
                 return "NO INFO";
             }
-
+            $counter =$this->redis->incr('counterUsagiMQ');
             $envelope = array();
             $envelope['id'] = $id; // this id is not the id used by the library. This could be repeated.
             $envelope['from'] = $from; // it could be used for security
