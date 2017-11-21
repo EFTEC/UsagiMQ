@@ -27,12 +27,13 @@ if ($usa->connected) {
 
 /**
  * This operation returns nothing and takes 1ms.
- * @param $url
+ * @param string $url relative path.
  */
 function curlAsync($url) {
+    $actuallink = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $cleanLink=substr($actuallink ,0,strrpos($actuallink,'/')).'/'.$url;
     $ch = curl_init();
-
-    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_URL, $cleanLink);
     curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
     curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1); // for php >5.2.3
     curl_setopt($ch, CURLOPT_NOSIGNAL, 1);

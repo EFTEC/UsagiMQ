@@ -37,7 +37,11 @@ This library uses Redis. Redis is an open source (BSD licensed), in-memory data 
 ## Why UsagiMQ?
 
 While there are many Message Queue in the market (including open source / freeware / commercial) but most of them are heavyweight.
-UsagiMQ is lightweight, it was developed thinking in customization. You could optimize and customize it for your needing, for example, changing the structure of envelope.
+UsagiMQ is lightweight, it was developed thinking in customization. You could optimize and customize it for your needing, for example, changing the structure of envelope.  
+
+It is a software based solution that could be **re-programmed** as you want to. Instead, most MQ are **configured-based**.
+
+For example, you could create easily a ORCHESTATION, CHOREOGRAPHY or A CLUSTER via software.
 
 UsagiMQ lightweight:
 
@@ -48,7 +52,7 @@ UsagiMQ lightweight:
 
 ## Is it scalable?
 
-Yes, but it requires a LOAD BALANCER. 
+Yes, but it requires a LOAD BALANCER that you could program or use a software or hardware solution. Its your call.
 
 ## Envelope structure
 
@@ -215,6 +219,7 @@ Optional. It shows an UI with statistics. The default user and password is **adm
 - 2017-11-12 1.0 first version
 - 2017-11-14 1.1 add new members and fixed the operation listPending. Now, its sorted.
 - 2017-11-19 1.2 add UI
+- 2017-11-21 1.3 add new functionalities for the UI. The code is still lower than 500 lines of code.
 
 ## Todo
 

@@ -3,7 +3,7 @@
 /**
  * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
- * @version 1.2 2017-11-14
+ * @version 1.3 2017-11-21
  * @link https://www.google.cl
  */
 class UsagiMQ
@@ -25,16 +25,21 @@ class UsagiMQ
 
     const VERSION='1.2 2017-11-14';
 
-    const USER='admin'; // PLEASE CHANGE IT . User and Password of the UI.
-    const PASSWORD='admin'; // PLEASE CHANGE IT
+    const DEFAULTUSER='admin'; // If the user or password is not set, then it uses it.
+    const DEFAULTPASSWORD='admin'; // The password is only for the UI.
+
+    var $user;
+    var $password;
 
     /**
      * UsagiMQ constructor.
      * @param $redisIP . Example '127.0.0.1'
-     * @param $redisPort.  Example 6379
-     * @param int $redisDB.  Example 0,1,etc.
+     * @param int $redisPort .  Example 6379
+     * @param int $redisDB .  Example 0,1,etc.
+     * @param string $user
+     * @param string $password
      */
-    public function __construct($redisIP,$redisPort=6379,$redisDB=0)
+    public function __construct($redisIP, $redisPort=6379, $redisDB=0, $user=self::DEFAULTUSER, $password=self::DEFAULTPASSWORD)
     {
         try {
             if (!class_exists("Redis")) {
@@ -48,6 +53,8 @@ class UsagiMQ
                 $this->debugFile("Unable to open redis $redisIP : $redisPort",'__construct');
                 return;
             }
+            $this->user=$user;
+            $this->password=$password;
             @$this->redis->select($redisDB);
             $this->connected=true;
         } catch (Exception $ex) {
@@ -177,13 +184,17 @@ class UsagiMQ
             $this->debugFile($ex->getMessage(),'close');
         }
     }
+    public function logFilename() {
+        $folder=(@ini_get('error_log')!="")?dirname(ini_get('error_log')):'';
+        $file=$folder.'\\'.self::LOGFILE;
+        return $file;
+    }
 
     public function debugFile($txt,$type="ERROR") {
         if (empty(self::LOGFILE)) {
             return;
         }
-        $folder=(@ini_get('error_log')!="")?dirname(ini_get('error_log')):'';
-        $file=$folder.'\\'.self::LOGFILE;
+        $file=$this->logFilename();
         $fz=@filesize($file);
 
         if (is_object($txt) || is_array($txt)) {
@@ -212,27 +223,61 @@ class UsagiMQ
         fclose($fp);
     }
     public function webUI() {
-        //@session_start();
+        @session_start();
         $mode=@$_REQUEST['mode'];
-        //$curUser=@$_SESSION['user'];
-        $curUser='';
-        if ($mode=='login' || $curUser=='') {
-            $info['user']=@$_POST['user'];
-            $info['password']=@$_POST['password'];
-            $info['msg']='';
-            $button=@$_POST['button'];
-            if ($button) {
-                if ($info['user']!=self::USER || $info['password']!=self::PASSWORD) {
-                    $info['msg']="User or login incorrect";
-                    $this->loginForm($info);
+        $curUser=@$_SESSION['user'];
+        if ($curUser=='') {
+            if ($mode=='login') {
+                $info['user']=@$_POST['user'];
+                $info['password']=@$_POST['password'];
+                $info['msg']='';
+                $button=@$_POST['button'];
+                if ($button) {
+                    sleep(1);
+                    if ($info['user']!=$this->user || $info['password']!=$this->password) {
+                        $info['msg']="User or login incorrect";
+                        $this->loginForm($info);
+                        @session_destroy();
+                    } else {
+                        $_SESSION['user']=$info['user'];
+                        $this->tableForm();
+                    }
                 } else {
-                    $this->tableForm();
+                    @session_destroy();
+                    $this->loginForm($info);
                 }
             } else {
-                $this->loginForm($info);
+                $this->loginForm(array());
+            }
+        } else {
+            switch ($mode) {
+                case 'clear':
+                    $this->deleteAll();
+                    $this->tableForm();
+                    break;
+                case 'refresh':
+                    $this->tableForm();
+                    return "refresh";
+                    break;
+                case 'logout':
+                    @session_destroy();
+                    $this->loginForm(array());
+                    break;
+                case 'showall':
+                    if (empty(self::LOGFILE)) {
+                        $this->tableForm();
+                        return "";
+                    }
+                    $file=$this->logFilename();
+                    $fc=file_get_contents($file);
+                    $fc=str_replace("\n",'<br>',$fc);
+                    $this->tableForm($fc);
+                    break;
+                default:
+                    $this->tableForm();
             }
         }
-
+        return "";
     }
     private function loginForm($info) {
         $this->cssForm();
@@ -241,7 +286,7 @@ class UsagiMQ
         <table id='tablecss'>
             <tr><th><b>UsagiMQ</b></th><th>&nbsp;</th></tr>            
             <tr><td><b>User:</b></td><td><input type='text' name='user' value='".htmlentities(@$info['user'])."' /></td></tr>
-            <tr><td><b>Password:</b></td><td><input type='text' name='password' value='".htmlentities(@$info['password'])."' /></td></tr>
+            <tr><td><b>Password:</b></td><td><input type='password' name='password' value='".htmlentities(@$info['password'])."' /></td></tr>
             <tr><td colspan='2'><input type='submit' name='button' value='Login' /></td></tr>
             <tr><td colspan='2'><b color='red'>".@$info['msg']."</b></td></tr>
             </table>        
@@ -249,10 +294,11 @@ class UsagiMQ
         </form>
         ";
     }
-    private function tableForm() {
+    private function tableForm($lastMessage='') {
         $counter = @$this->redis->get('counterUsagiMQ');
         $lastError = @$this->redis->get('LastErrorUsagiMQ');
-        $lastMessage = @$this->redis->get('LastMessageUsagiMQ');
+        $curUser=@$_SESSION['user'];
+        $lastMessage =($lastMessage=='')?@$this->redis->get('LastMessageUsagiMQ'):$lastMessage;
         $num=0;
         while($arr_keys = $this->redis->scan($it, "UsagiMQ_*", 1000)) { // 1000 read at the same time.
             foreach($arr_keys as $str_key) {
@@ -260,14 +306,18 @@ class UsagiMQ
             }
         }
         $this->cssForm();
+        $myurl=$_SERVER["SCRIPT_NAME"];
         echo "
             <table id='tablecss'>
-            <tr><th><b>UsagiMQ</b></th><th><a href='".$_SERVER["REQUEST_URI"]."'>Logout</a></th></tr>
+            <tr><th  style='width: 150px'><b>UsagiMQ</b></th><th>{$curUser}@UsagiMQ <a href='$myurl?mode=logout'>Logout</a></th></tr>
             <tr><td><b>Version:</b></td><td>".self::VERSION."</td></tr>            
             <tr><td><b>Counter:</b></td><td>$counter</td></tr>
-            <tr><td><b>Pending:</b></td><td>$num</td></tr>
+            <tr><td><b>Pending:</b></td><td>$num 
+                <a href='$myurl?mode=refresh'>Run Pending</a>&nbsp;&nbsp;&nbsp;
+                <a href='$myurl?mode=clear' onclick=\"return confirm('Are you sure?')\">Clear</a></td></tr>
             <tr><td><b>Last Error:</b></td><td>".htmlentities($lastError)."</td></tr>
-            <tr><td><b>Last Message:</b></td><td>".htmlentities($lastMessage)."</td></tr>            
+            <tr><td><b>Last Message:</b></td><td>$lastMessage 
+                        <a href='$myurl?mode=showall'>Show All</a></td></tr>            
             </table>
         ";
 
@@ -276,6 +326,21 @@ class UsagiMQ
         echo "<head>
             <title>UsagiMQ</title>
             <style>
+            a {
+                background-color: white;
+                color: black;
+                border: 2px solid #4CAF50;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin-left: 20px;
+            }
+            a:hover {
+            background-color: #4CAF50;
+            color: white;
+            }
             #tablecss {
                 font-family: \"Trebuchet MS\", Arial, Helvetica, sans-serif;
                 border-collapse: collapse;
