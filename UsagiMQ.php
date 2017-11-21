@@ -23,7 +23,7 @@ class UsagiMQ
 
     const LOGFILE='usagimq.txt'; // empty for no log
 
-    const VERSION='1.2 2017-11-14';
+    const VERSION='1.3 2017-11-21';
 
     const DEFAULTUSER='admin'; // If the user or password is not set, then it uses it.
     const DEFAULTPASSWORD='admin'; // The password is only for the UI.
