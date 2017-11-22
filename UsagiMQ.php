@@ -306,10 +306,11 @@ class UsagiMQ
         }
         $this->cssForm();
         $myurl=$_SERVER["SCRIPT_NAME"];
+        $today=new DateTime();
         echo "
             <table id='tablecss'>
             <tr><th  style='width: 150px'><b>UsagiMQ</b></th><th>{$curUser}@UsagiMQ <a href='$myurl?mode=logout'>Logout</a></th></tr>
-            <tr><td><b>Version:</b></td><td>".self::VERSION."</td></tr>            
+            <tr><td><b>Version:</b></td><td>".self::VERSION." Current Date :".$today->format('Y-m-d H:i:s')."</td></tr>            
             <tr><td><b>Counter:</b></td><td>$counter</td></tr>
             <tr><td><b>Pending:</b></td><td>$num 
                 <a href='$myurl?mode=refresh'>Run Pending</a>&nbsp;&nbsp;&nbsp;
@@ -322,6 +323,9 @@ class UsagiMQ
 
     }
     private function cssForm() {
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
         echo "<head>
             <title>UsagiMQ</title>
             <style>
