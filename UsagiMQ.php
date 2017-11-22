@@ -272,6 +272,17 @@ class UsagiMQ
                     $fc=str_replace("\n",'<br>',$fc);
                     $this->tableForm($fc);
                     break;
+                case 'deletelog':
+                    if (empty(self::LOGFILE)) {
+                        $this->tableForm();
+                        return "";
+                    }
+                    $file=$this->logFilename();
+                    $fp = @fopen($file, 'w');
+                    @fclose($fp);
+
+                    $this->tableForm();
+                    break;
                 default:
                     $this->tableForm();
             }
@@ -282,7 +293,7 @@ class UsagiMQ
         $this->cssForm();
         echo "
         <form method='post'>
-        <table id='tablecss'>
+        <table id='tablecss' >
             <tr><th><b>UsagiMQ</b></th><th>&nbsp;</th></tr>            
             <tr><td><b>User:</b></td><td><input type='text' name='user' value='".htmlentities(@$info['user'])."' /></td></tr>
             <tr><td><b>Password:</b></td><td><input type='password' name='password' value='".htmlentities(@$info['password'])."' /></td></tr>
@@ -317,7 +328,8 @@ class UsagiMQ
                 <a href='$myurl?mode=clear' onclick=\"return confirm('Are you sure?')\">Clear</a></td></tr>
             <tr><td><b>Last Error:</b></td><td>".htmlentities($lastError)."</td></tr>
             <tr><td><b>Last Message:</b></td><td>$lastMessage 
-                        <a href='$myurl?mode=showall'>Show All</a></td></tr>            
+                        <a href='$myurl?mode=showall'>Show All</a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<a href='$myurl?mode=deletelog'>Delete log</a></td></tr>            
             </table>
         ";
 
@@ -348,6 +360,10 @@ class UsagiMQ
                 font-family: \"Trebuchet MS\", Arial, Helvetica, sans-serif;
                 border-collapse: collapse;
                 width: 100%;
+                table-layout : fixed;
+            }
+            #tablecss td {
+                word-wrap:break-word;
             }
             
             #tablecss td, #customers th {
