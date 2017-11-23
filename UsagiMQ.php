@@ -3,7 +3,7 @@
 /**
  * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
- * @version 1.3 2017-11-21
+ * @version 1.3.235 2017-11-21
  * @link https://www.google.cl
  */
 class UsagiMQ
@@ -23,7 +23,7 @@ class UsagiMQ
 
     const LOGFILE='usagimq.txt'; // empty for no log
 
-    const VERSION='1.3 2017-11-21';
+    const VERSION='1.3 Build 235 2017-11-23';
 
     const DEFAULTUSER='admin'; // If the user or password is not set, then it uses it.
     const DEFAULTPASSWORD='admin'; // The password is only for the UI.
@@ -256,7 +256,10 @@ class UsagiMQ
                     break;
                 case 'refresh':
                     $this->tableForm();
-                    return "refresh";
+                    break;
+                case 'execute':
+                    $this->tableForm();
+                    return "execute";
                     break;
                 case 'logout':
                     @session_destroy();
@@ -320,11 +323,14 @@ class UsagiMQ
         $today=new DateTime();
         echo "
             <table id='tablecss'>
-            <tr><th  style='width: 150px'><b>UsagiMQ</b></th><th>{$curUser}@UsagiMQ <a href='$myurl?mode=logout'>Logout</a></th></tr>
+            <tr><th  style='width: 150px'><b>UsagiMQ</b></th><th>{$curUser}@UsagiMQ 
+                <a href='$myurl?mode=refresh'>refresh</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href='$myurl?mode=logout'>Logout</a>
+                </th></tr>
             <tr><td><b>Version:</b></td><td>".self::VERSION." Current Date :".$today->format('Y-m-d H:i:s')."</td></tr>            
             <tr><td><b>Counter:</b></td><td>$counter</td></tr>
             <tr><td><b>Pending:</b></td><td>$num 
-                <a href='$myurl?mode=refresh'>Run Pending</a>&nbsp;&nbsp;&nbsp;
+                <a href='$myurl?mode=execute'>Run Pending</a>&nbsp;&nbsp;&nbsp;
                 <a href='$myurl?mode=clear' onclick=\"return confirm('Are you sure?')\">Clear</a></td></tr>
             <tr><td><b>Last Error:</b></td><td>".htmlentities($lastError)."</td></tr>
             <tr><td><b>Last Message:</b></td><td>$lastMessage 
