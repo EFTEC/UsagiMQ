@@ -3,7 +3,7 @@
 /**
  * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
- * @version 1.3.235 2017-11-21
+ * @version 1.3.245 2017-11-26
  * @link https://www.google.cl
  */
 class UsagiMQ
@@ -23,7 +23,7 @@ class UsagiMQ
 
     const LOGFILE='usagimq.txt'; // empty for no log
 
-    const VERSION='1.3 Build 235 2017-11-23';
+    const VERSION='1.3 Build 245 2017-11-26';
 
     const DEFAULTUSER='admin'; // If the user or password is not set, then it uses it.
     const DEFAULTPASSWORD='admin'; // The password is only for the UI.
@@ -276,6 +276,8 @@ class UsagiMQ
                     $this->tableForm($fc);
                     break;
                 case 'deletelog':
+                    @$this->redis->set('LastErrorUsagiMQ', "");
+                    @$this->redis->set('LastMessageUsagiMQ',"");
                     if (empty(self::LOGFILE)) {
                         $this->tableForm();
                         return "";
@@ -283,6 +285,7 @@ class UsagiMQ
                     $file=$this->logFilename();
                     $fp = @fopen($file, 'w');
                     @fclose($fp);
+                    $this->debugFile("Log deleted","DEBUG");
 
                     $this->tableForm();
                     break;
@@ -313,9 +316,11 @@ class UsagiMQ
         $curUser=@$_SESSION['user'];
         $lastMessage =($lastMessage=='')?@$this->redis->get('LastMessageUsagiMQ'):$lastMessage;
         $num=0;
+        $pending="";
         while($arr_keys = $this->redis->scan($it, "UsagiMQ_*", 1000)) { // 1000 read at the same time.
             foreach($arr_keys as $str_key) {
                 $num++;
+                $pending.=$str_key."<br>";
             }
         }
         $this->cssForm();
@@ -329,7 +334,7 @@ class UsagiMQ
                 </th></tr>
             <tr><td><b>Version:</b></td><td>".self::VERSION." Current Date :".$today->format('Y-m-d H:i:s')."</td></tr>            
             <tr><td><b>Counter:</b></td><td>$counter</td></tr>
-            <tr><td><b>Pending:</b></td><td>$num 
+            <tr><td><b>Pending: $num</b></td><td>$pending
                 <a href='$myurl?mode=execute'>Run Pending</a>&nbsp;&nbsp;&nbsp;
                 <a href='$myurl?mode=clear' onclick=\"return confirm('Are you sure?')\">Clear</a></td></tr>
             <tr><td><b>Last Error:</b></td><td>".htmlentities($lastError)."</td></tr>
