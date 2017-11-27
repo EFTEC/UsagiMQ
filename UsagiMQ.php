@@ -351,6 +351,7 @@ class UsagiMQ
         header("Pragma: no-cache");
         echo "<head>
             <title>UsagiMQ</title>
+              <link rel=\"icon\" type=\"image/x-icon\" class=\"js-site-favicon\" href=\"favicon.ico\">
             <style>
             a {
                 background-color: white;
