@@ -3,8 +3,8 @@
 /**
  * Class UsagiMQ A minimalist Message Queue
  * @author Jorge Castro C. MIT License.
- * @version 1.3.245 2017-11-26
- * @link https://www.google.cl
+ * @version 1.4 2018-08-06
+ * @link https://github.com/EFTEC/UsagiMQ
  */
 class UsagiMQ
 {
@@ -16,8 +16,8 @@ class UsagiMQ
     public $op=''; // last op obtained
     public $key=''; // last key obtained
 
-    const MAXTIMEKEEP=3600*24*14; // max time in seconds to keep the information, 2 weeks ,-1 for unlimited.
-    const MAXPOST=1024*1024*20; // 20mb
+    const MAXTIMEKEEP=1200000; // 3600*24*14 max time in seconds to keep the information, 2 weeks ,-1 for unlimited.
+    const MAXPOST=20971520; // 20mb
 
     const MAXTRY=20; // max number of tries. If the operation fails 20 times then the item is deleted.
 
@@ -190,7 +190,7 @@ class UsagiMQ
     }
 
     public function debugFile($txt,$type="ERROR") {
-        if (empty(self::LOGFILE)) {
+        if (self::LOGFILE=='') {
             return;
         }
         $file=$this->logFilename();
@@ -266,7 +266,7 @@ class UsagiMQ
                     $this->loginForm(array());
                     break;
                 case 'showall':
-                    if (empty(self::LOGFILE)) {
+                    if (self::LOGFILE=='') {
                         $this->tableForm();
                         return "";
                     }
@@ -278,7 +278,7 @@ class UsagiMQ
                 case 'deletelog':
                     @$this->redis->set('LastErrorUsagiMQ', "");
                     @$this->redis->set('LastMessageUsagiMQ',"");
-                    if (empty(self::LOGFILE)) {
+                    if (self::LOGFILE=='') {
                         $this->tableForm();
                         return "";
                     }
@@ -304,7 +304,7 @@ class UsagiMQ
             <tr><td><b>User:</b></td><td><input type='text' name='user' value='".htmlentities(@$info['user'])."' /></td></tr>
             <tr><td><b>Password:</b></td><td><input type='password' name='password' value='".htmlentities(@$info['password'])."' /></td></tr>
             <tr><td colspan='2'><input type='submit' name='button' value='Login' /></td></tr>
-            <tr><td colspan='2'><b color='red'>".@$info['msg']."</b></td></tr>
+            <tr><td colspan='2'><b style='color:red'>".@$info['msg']."</b></td></tr>
             </table>        
         <input type='hidden' name='mode' value='login' />
         </form>
@@ -370,9 +370,13 @@ class UsagiMQ
             }
             #tablecss {
                 font-family: \"Trebuchet MS\", Arial, Helvetica, sans-serif;
+                font-size:1.5em;
                 border-collapse: collapse;
                 width: 100%;
                 table-layout : fixed;
+            }
+            input {
+            font-size:1.5em;
             }
             #tablecss td {
                 word-wrap:break-word;

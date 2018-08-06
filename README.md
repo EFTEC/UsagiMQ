@@ -220,6 +220,7 @@ Optional. It shows an UI with statistics. The default user and password is **adm
 - 2017-11-14 1.1 add new members and fixed the operation listPending. Now, its sorted.
 - 2017-11-19 1.2 add UI
 - 2017-11-21 1.3 add new functionalities for the UI. The code is still lower than 500 lines of code.
+- 2018-08-06 1.4 some fixes
 
 ## Todo
 
